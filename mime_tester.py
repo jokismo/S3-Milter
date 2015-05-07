@@ -1,16 +1,10 @@
 from email import message_from_file
-from email import Message
-from email import Generator
 from email import Utils
 import datetime
 import re
-from boto.s3.connection import S3Connection
 
-from file_extension_map import extension_map
-
-
-def connect_s3():
-    pass
+from utils.file_extension_map import extension_map
+from services.s3 import S3
 
 
 def check_content_disposition(part, attachment_name):
@@ -60,8 +54,8 @@ def get_attachment_parts(message, txt_list, html_list):
             yield (part, attachment_name, content_id)
 
 
-def upload_file(f_data, f_name):
-    url = 'http://url/' + f_name
+def upload_file(f_data, f_name, service):
+    url = service.store(path_array=['test'], key=f_name, data=f_data)
     return url
 
 
@@ -131,6 +125,8 @@ def get_html_insert_position(html):
 
 
 if __name__ == '__main__':
+    s3 = S3()
+    s3.set_bucket('persafd')
     f = open('sample_message', 'r')
     try:
         html_parts = []
@@ -142,7 +138,7 @@ if __name__ == '__main__':
         text_string = '\nAttachments have been uploaded to Amazon S3:\n'
         for attachment_part, file_name, c_id in generator:
             data = attachment_part.get_payload(decode=True)
-            f_url = upload_file(data, file_name)
+            f_url = upload_file(data, file_name, s3)
             clear_attachment(attachment_part)
             html_string += '<li><a href="{}">{}</a></li>'.format(f_url, file_name)
             text_string += '{}: {}\n'.format(file_name, f_url)
@@ -152,7 +148,6 @@ if __name__ == '__main__':
         add_plain_text_urls(text_parts, text_string)
         replace_cids(html_parts, attachments_with_cid)
         add_html_urls(html_parts, html_string)
-        print msg
     finally:
         f.close()
 
