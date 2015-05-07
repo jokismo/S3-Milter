@@ -4,8 +4,13 @@ from email import Generator
 from email import Utils
 import datetime
 import re
+from boto.s3.connection import S3Connection
 
 from file_extension_map import extension_map
+
+
+def connect_s3():
+    pass
 
 
 def check_content_disposition(part, attachment_name):
@@ -81,9 +86,11 @@ def get_decoded_payload(part):
     
 def add_plain_text_urls(txt_list, urls_string):
     if len(txt_list) > 0:
-        text_body = get_decoded_payload(text_parts[0])
+        part = txt_list[0]
+        text_body = get_decoded_payload(part)
         text_body = urls_string + '\n' + text_body
-        txt_list[0].set_payload(text_body, charset='utf-8')
+        del part['content-transfer-encoding']
+        part.set_payload(text_body, charset='utf-8')
 
 
 def replace_cids(html_list, cid_dict):
@@ -97,6 +104,7 @@ def replace_cids(html_list, cid_dict):
             cid = cid_text[4:]
             if cid_dict.get(cid) is not None:
                 payload = payload.replace(cid_text, cid_dict[cid])
+        del part['content-transfer-encoding']
         part.set_payload(payload, charset='utf-8')
 
 
@@ -123,7 +131,7 @@ def get_html_insert_position(html):
 
 
 if __name__ == '__main__':
-    f = open('sample_messagee', 'r')
+    f = open('sample_message', 'r')
     try:
         html_parts = []
         text_parts = []
