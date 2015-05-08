@@ -3,10 +3,11 @@ from multiprocessing import Process as Thread, Queue
 import StringIO
 import tempfile
 import datetime
-
+import sys
 import Milter
 from email import message_from_file
 from email.generator import Generator
+
 from utils import log_config
 from utils import mime
 from utils.exceptions import MilterException
@@ -83,7 +84,11 @@ class S3Milter(Milter.Base):
 
     def upload_file(self, f_data, f_name):
         self.attachments += 1
-        url = self.s3.store(path_array=[datetime.datetime.now().strftime('%Y_%m_%d')], key=f_name, data=f_data)
+        f_folder = datetime.datetime.now().strftime('%Y_%m_%d')
+        f_size = sys.getsizeof(f_data, default=None)
+        if f_size is None:
+            f_size = 0
+        url = self.s3.store(path_array=[f_folder], key=f_name, data=f_data)
         return url
 
     def replace_body(self, msg):
