@@ -1,5 +1,5 @@
 import logging
-from multiprocessing import Process as Thread, Queue
+from multiprocessing import Process, Queue
 import StringIO
 import tempfile
 import datetime
@@ -115,7 +115,7 @@ class S3Milter(Milter.Base):
 
 
 def execute():
-    logger_thread = Thread(target=log_all_threads)
+    logger_thread = Process(target=log_all_threads)
     logger_thread.start()
     socket_name = '/etc/s3milter/sock'
     timeout = 600
