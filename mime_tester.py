@@ -2,6 +2,7 @@ from email import message_from_file
 from email import Utils
 import datetime
 import re
+import sys
 
 from utils.file_extension_map import extension_map
 from services.s3 import S3
@@ -55,8 +56,10 @@ def get_attachment_parts(message, txt_list, html_list):
 
 
 def upload_file(f_data, f_name, service):
-    url = service.store(path_array=['test'], key=f_name, data=f_data)
-    return url
+    print sys.getsizeof(f_data)
+    # url = service.store(path_array=['test'], key=f_name, data=f_data)
+    # return url
+    pass
 
 
 def clear_attachment(msg_part):

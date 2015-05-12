@@ -4,15 +4,13 @@ import logging
 
 from utils.exceptions import MilterException
 from milter_config import s3_creds
-from utils.log_config import log_error
 
 
 logger = logging.getLogger(__name__)
 
 
 def handle_error(function_name, error):
-    raise MilterException(500, 'S3 Service Error.', log_error(module_name=__name__, function_name=function_name,
-                                                              error=error))
+    raise MilterException(500, 'S3 Service Error.', '')
 
 
 def path_array_to_string(path_array):

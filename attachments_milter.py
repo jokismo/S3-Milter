@@ -25,7 +25,10 @@ def log_all_threads():
         log_item = log_queue.get()
         if not log_item:
             break
-        getattr(logger, log_item['type'])(log_item['message'])
+        if log_item['type'] == 'error':
+            getattr(logger, log_item['type'])(log_item['message'], exc_info=True)
+        else:
+            getattr(logger, log_item['type'])(log_item['message'])
 
 
 class S3Milter(Milter.Base):

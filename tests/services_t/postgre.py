@@ -25,6 +25,10 @@ class PostgreTest(object):
         test_select_string()
         test_update_string()
         test_insert_string()
+        test_add_conditions()
+        test_add_sorting()
+        test_add_returning()
+        test_sql_config_to_string()
 
     def run_networked_tests(self, dbo):
         self.dbo = dbo
@@ -81,7 +85,113 @@ def test_insert_string():
 
 
 def test_add_conditions():
-    pass
+    expected = ' WHERE a = %(a)s and (b >= %(b)s or c = %(c)s) and d = %(d)s'
+    assert postgre.add_conditions({
+        'conditions': [
+            {
+                'var_name': 'a',
+                'operator': '=',
+                'next': 'and'
+            },
+            {
+                'group_open': True,
+                'var_name': 'b',
+                'operator': '>=',
+                'next': 'or'
+            },
+            {
+                'group_close': True,
+                'var_name': 'c',
+                'operator': '=',
+                'next': 'and'
+            },
+            {
+                'var_name': 'd',
+                'operator': '='
+            }
+        ]
+    }) == expected
+
+
+def test_add_sorting():
+    expected = ' ORDER BY a, b ASC, c DESC, d'
+    assert postgre.add_sorting({
+        'sort': [
+            {
+                'var_name': 'a'
+            },
+            {
+                'var_name': 'b',
+                'order': 'asc'
+            },
+            {
+                'var_name': 'c',
+                'order': 'desc'
+            },
+            {
+                'var_name': 'd'
+            }
+        ]
+    }) == expected
+
+
+def test_add_returning():
+    expected = ' RETURNING a, b, c, d'
+    assert postgre.add_returning({
+        'return_values': ['a', 'b', 'c', 'd']
+    }) == expected
+
+
+def test_sql_config_to_string():
+    expected = 'SELECT a, b, c, d FROM name' \
+               ' WHERE a = %(a)s and (b >= %(b)s or c = %(c)s) and d = %(d)s' \
+               ' ORDER BY a, b ASC, c DESC, d' \
+               ' RETURNING a, b, c, d;'
+    assert postgre.sql_config_to_string({
+        'type': 'select',
+        'table_name': 'name',
+        'columns': ['a', 'b', 'c', 'd'],
+        'return_values': ['a', 'b', 'c', 'd'],
+        'sort': [
+            {
+                'var_name': 'a'
+            },
+            {
+                'var_name': 'b',
+                'order': 'asc'
+            },
+            {
+                'var_name': 'c',
+                'order': 'desc'
+            },
+            {
+                'var_name': 'd'
+            }
+        ],
+        'conditions': [
+            {
+                'var_name': 'a',
+                'operator': '=',
+                'next': 'and'
+            },
+            {
+                'group_open': True,
+                'var_name': 'b',
+                'operator': '>=',
+                'next': 'or'
+            },
+            {
+                'group_close': True,
+                'var_name': 'c',
+                'operator': '=',
+                'next': 'and'
+            },
+            {
+                'var_name': 'd',
+                'operator': '='
+            }
+        ]
+    }) == expected
 
 
 if __name__ == '__main__':
@@ -93,5 +203,20 @@ if __name__ == '__main__':
     try:
         tester.run_offline_tests()
         #tester.run_networked_tests(test_dbo)
+        test_dbo.conn.rollback()
+        cursor = test_dbo.conn.cursor()
+        # cursor.execute('INSERT INTO attachments (file_name, folder, sender_id, receiver_id, bytes) '
+        #                'VALUES (%(file_name)s, %(folder)s, %(sender_id)s, %(receiver_id)s, %(bytes)s);',
+        #                {'file_name': 'a',
+        #                 'folder': 'a',
+        #                 'sender_id': 'a',
+        #                 'receiver_id': 'a',
+        #                 'bytes': 0})
+        a = test_dbo.transaction({
+            'type': 'select',
+            'table_name': 'postfix_mailboxes',
+            'columns': ['*']
+        })
+        print a
     finally:
         test_dbo.close()
