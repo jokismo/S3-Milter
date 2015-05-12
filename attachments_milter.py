@@ -5,6 +5,7 @@ import tempfile
 import datetime
 import sys
 import Milter
+from Milter.utils import parse_addr
 from email import message_from_file
 from email.generator import Generator
 
@@ -39,6 +40,15 @@ class S3Milter(Milter.Base):
         self.s3 = S3()
         self.attachments = 0
         self.start_time = log_config.timestamp_start()
+        self.mail_from = ''
+
+    @Milter.noreply
+    def envfrom(self, mail_from, *esmtp_params):
+        try:
+            self.mail_from = parse_addr(mail_from)[0]
+        except Exception:
+            self.mail_from = str(mail_from)
+        return Milter.CONTINUE
 
     @Milter.noreply
     def body(self, chunk):

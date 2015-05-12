@@ -1,18 +1,21 @@
-import logging
 from psycopg2 import connect
 from psycopg2 import pool
 from psycopg2 import ProgrammingError
+from contextlib import contextmanager
 
 from utils.exceptions import MilterException
 from utils.log_config import log_error
 
 
-logger = logging.getLogger(__name__)
-
-
 def handle_error(function_name, error, name='Postgre Service Error.'):
+    error = str(error)
+    error = error.replace('\n', ' ')
     raise MilterException(500, name, log_error(module_name=__name__, function_name=function_name,
                                                error=error))
+
+
+def list_to_list_of_dicts(column_names, results):
+    return [dict(zip(column_names, values)) for values in results]
 
 
 def select_string(config):
@@ -47,11 +50,16 @@ def update_string(config):
     return sql_string
 
 
+def delete_string(config):
+    return 'DELETE FROM {table_name}'.format(**config)
+
+
 def statement_type_func_map(statement_type):
     return {
         'insert': insert_string,
         'update': update_string,
-        'select': select_string
+        'select': select_string,
+        'delete': delete_string
     }[statement_type]
 
 
@@ -107,26 +115,42 @@ def sql_config_to_string(config):
         return sql_string
 
 
-def execute_transaction(cursor, conn, trans_config, bind_vars, commit):
+def transaction(conn, trans_config, bind_vars=None, return_dicts=False):
     try:
+        cursor = conn.cursor()
         sql_string = sql_config_to_string(trans_config)
         cursor.execute(sql_string, bind_vars)
-        if commit:
-            conn.commit()
         try:
             results_list = cursor.fetchall()
             column_names = [c.name for c in cursor.description]
         except ProgrammingError:
-            pass
+            return 'No Return Values.'
         else:
-            return {
-                'column_names': column_names,
-                'results_list': results_list
-            }
+            if return_dicts:
+                return list_to_list_of_dicts(column_names, results_list)
+            else:
+                return {
+                    'column_names': column_names,
+                    'results_list': results_list
+                }
     except MilterException as e:
         raise e
     except Exception as e:
         handle_error('transaction', e)
+
+
+def commit(conn):
+    try:
+        conn.commit()
+    except Exception as e:
+        handle_error('commit', e)
+
+
+def rollback(conn):
+    try:
+        conn.rollback()
+    except Exception as e:
+        handle_error('commit', e)
 
 
 class Postgre(object):
@@ -138,15 +162,7 @@ class Postgre(object):
         if is_pool:
             self.init_pool(minconn, maxconn)
         else:
-            self.connect()
-
-    def connect(self):
-        try:
-            self.conn = connect(database=self.creds['database'], user=self.creds['user'],
-                                password=self.creds['password'], host=self.creds['host'],
-                                port=self.creds['port'])
-        except Exception as e:
-            handle_error('connect', e)
+            self.conn = self.make_connection()
 
     def init_pool(self, minconn, maxconn):
         try:
@@ -156,40 +172,72 @@ class Postgre(object):
                                                     password=self.creds['password'],
                                                     host=self.creds['host'], port=self.creds['port'])
         except Exception as e:
-            handle_error('connect', e)
+            handle_error('init_pool', e)
 
-    def transaction(self, trans_config, bind_vars=None, commit=False):
+    @contextmanager
+    def get_connection(self):
+        got_from_pool = False
+        temporary = False
         try:
             if self.pool is not None:
                 try:
                     conn = self.pool.getconn()
-                    cursor = conn.cursor()
+                    got_from_pool = True
                 except Exception as e:
                     if str(e) == 'connection pool exhausted':
-                        return self.one_time_connection(trans_config, bind_vars)
-                    raise e
+                        conn = self.make_connection()
+                        temporary = True
+                    else:
+                        raise e
             else:
                 conn = self.conn
-                if conn.closed != 0:
-                    self.connect()
+                if conn.closed != 0:  # Non zero means closed or problem
+                    self.conn = self.make_connection()
                     conn = self.conn
-                cursor = conn.cursor()
+        except MilterException as e:
+            raise e
         except Exception as e:
             handle_error('transaction', '<Connection Fail>' + str(e))
         else:
-            return execute_transaction(cursor, conn, trans_config, bind_vars, commit)
+            yield conn
+        finally:
+            try:
+                if got_from_pool:
+                    self.pool.putconn(conn)
+            except Exception as e:
+                handle_error('transaction', '<Pool Return Fail>' + str(e))
+            try:
+                if temporary:
+                    conn.close()
+            except Exception as e:
+                handle_error('transaction', '<Temporary Connection Close Fail>' + str(e))
 
-    def one_time_connection(self, trans_config, bind_vars=None, commit=False):
-        with connect(database=self.creds['database'], user=self.creds['user'],
-                     password=self.creds['password'], host=self.creds['host'],
-                     port=self.creds['port']) as conn:
-            cursor = conn.cursor()
-            return execute_transaction(cursor, conn, trans_config, bind_vars, commit)
+    def make_connection(self):
+        try:
+            return connect(database=self.creds['database'], user=self.creds['user'],
+                           password=self.creds['password'], host=self.creds['host'],
+                           port=self.creds['port'])
+        except Exception as e:
+            handle_error('connect', e)
 
     def close(self):
-        if self.conn is not None:
-            self.conn.close()
-            self.conn = None
-        if self.pool is not None:
-            self.pool.closeall()
-            self.pool = None
+        try:
+            if self.conn is not None:
+                self.conn.close()
+                self.conn = None
+            if self.pool is not None:
+                self.pool.closeall()
+                self.pool = None
+        except Exception as e:
+            handle_error('close', e)
+
+    def disconnect_on_exit(self):
+        try:
+            self.close()
+        except:
+            try:
+                self.close()
+            except BaseException as e:
+                handle_error('disconnect_on_exit', e)
+        finally:
+            raise SystemExit
