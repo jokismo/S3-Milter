@@ -153,6 +153,11 @@ def rollback(conn):
         handle_error('commit', e)
 
 
+def get_dsn(params):
+    items = [(k, v) for (k, v) in params.iteritems()]
+    return " ".join(["%s=%s" % (k, str(v)) for (k, v) in items])
+
+
 class Postgre(object):
 
     def __init__(self, creds, is_pool=False, minconn=5, maxconn=10):
@@ -166,11 +171,8 @@ class Postgre(object):
 
     def init_pool(self, minconn, maxconn):
         try:
-            self.pool = pool.ThreadedConnectionPool(minconn=minconn, maxconn=maxconn,
-                                                    database=self.creds['database'],
-                                                    user=self.creds['user'],
-                                                    password=self.creds['password'],
-                                                    host=self.creds['host'], port=self.creds['port'])
+            self.pool = pool.SimpleConnectionPool(minconn=minconn, maxconn=maxconn,
+                                                  dsn=get_dsn(self.creds))
         except Exception as e:
             handle_error('init_pool', e)
 
@@ -214,9 +216,7 @@ class Postgre(object):
 
     def make_connection(self):
         try:
-            return connect(database=self.creds['database'], user=self.creds['user'],
-                           password=self.creds['password'], host=self.creds['host'],
-                           port=self.creds['port'])
+            return connect(dsn=get_dsn(self.creds))
         except Exception as e:
             handle_error('connect', e)
 

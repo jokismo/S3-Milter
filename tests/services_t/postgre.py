@@ -55,7 +55,7 @@ class PostgreTest(object):
 
     def test_pool(self):
         # Test get connection
-        self.dbo.init_pool(minconn=1, maxconn=2)
+        self.dbo.init_pool(minconn=1, maxconn=2, async=False)
         conn_one = self.dbo.pool.getconn()
         assert conn_one.closed == 0
         # Test get connection in thread
@@ -86,7 +86,7 @@ class PostgreTest(object):
         with self.dbo.get_connection() as conn:
             assert conn.closed == 0
         assert self.dbo.conn.closed == 0
-        self.dbo.init_pool(minconn=1, maxconn=2)
+        self.dbo.init_pool(minconn=1, maxconn=2, async=False)
         self.dbo.conn.close()
         conn_one = self.dbo.pool.getconn()
         # Test with pool
