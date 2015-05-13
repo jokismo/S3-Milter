@@ -1,5 +1,7 @@
 import logging
+import atexit
 from multiprocessing import Process, Queue
+from multiprocessing.managers import BaseManager
 import StringIO
 import tempfile
 import datetime
@@ -13,15 +15,17 @@ from utils import log_config
 from utils import mime
 from utils.exceptions import MilterException
 from services.s3 import S3
-
+from services.postgre import Postgre
+from milter_config import postgresql_creds
 
 log_config.init()
 log_config.set_level(is_dev=False)
-logger = logging.getLogger(__name__)
 log_queue = Queue(maxsize=0)
+postgre = Postgre(postgresql_creds, is_pool=True, minconn=5, maxconn=10)
 
 
 def log_all_threads():
+    logger = logging.getLogger(__name__)
     while True:
         log_item = log_queue.get()
         if not log_item:
@@ -41,6 +45,7 @@ class S3Milter(Milter.Base):
         self.attachments = 0
         self.start_time = log_config.timestamp_start()
         self.mail_from = ''
+        self.recipients = []
 
     @Milter.noreply
     def envfrom(self, mail_from, *esmtp_params):
@@ -48,6 +53,15 @@ class S3Milter(Milter.Base):
             self.mail_from = parse_addr(mail_from)[0]
         except Exception:
             self.mail_from = str(mail_from)
+        return Milter.CONTINUE
+
+    @Milter.noreply
+    def envrcpt(self, mail_recip, *esmtp_params):
+        try:
+            recip = parse_addr(mail_recip)[0]
+        except Exception:
+            recip = str(mail_recip)
+        self.recipients.append(recip)
         return Milter.CONTINUE
 
     @Milter.noreply
@@ -128,6 +142,8 @@ class S3Milter(Milter.Base):
 
 
 def execute():
+    logger = logging.getLogger(__name__)
+    atexit.register(postgre.disconnect_on_exit)
     logger_thread = Process(target=log_all_threads)
     logger_thread.start()
     socket_name = '/etc/s3milter/sock'
