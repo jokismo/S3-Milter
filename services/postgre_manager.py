@@ -18,7 +18,6 @@ class PostgreManager(Process):
             self.log('error', log_config.log_error(module_name=__name__, function_name='__init__',
                                                    error=str(e)))
 
-
     def on_terminate(self, num, frame):
         self.log('error', log_config.log_error(module_name=__name__, function_name='on_terminate',
                                                error='Postgre Manager Terminated'))
@@ -59,8 +58,8 @@ class PostgreManager(Process):
                 else:
                     postgre.transaction(conn, postgre_item['command'])
                 conn.commit()
-                self.log('info', log_config.log_success(module_name=__name__, function_name='execute_transaction',
-                                                        msg='Postgre Item Received'))
+                self.log('debug', log_config.log_success(module_name=__name__, function_name='execute_transaction',
+                                                         msg='Postgre Transaction Complete'))
         except Exception as e:
             self.log('error', log_config.log_error(module_name=__name__, function_name='execute_transaction',
                                                    error=str(e)))

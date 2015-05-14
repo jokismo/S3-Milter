@@ -5,9 +5,6 @@ import datetime
 
 default_formatter = logging.Formatter('<%(asctime)s><%(levelno)s>%(message)s')
 logger = {}
-time = {
-    'start': datetime.datetime.now()
-}
 
 
 def init():
@@ -42,11 +39,11 @@ def set_level(is_dev):
 
 
 def timestamp_start():
-    time['start'] = datetime.datetime.now()
+    return datetime.datetime.now()
 
 
-def timestamp_end():
-    return datetime.datetime.now() - time['start']
+def timestamp_end(start):
+    return datetime.datetime.now() - start
 
 
 def log_error(**kwargs):
