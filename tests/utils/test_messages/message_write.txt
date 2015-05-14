@@ -1,0 +1,65 @@
+From: "Doug Sauder" <doug@example.com>
+To: "Joe Blow" <jblow@example.com>
+Subject: Test message from Microsoft Outlook 00
+Date: Wed, 17 May 2000 19:38:28 -0400
+Message-ID: <NDBBIAKOPKHFGPLCODIGCEKFCHAA.doug@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="----=_NextPart_000_0005_01BFC037.799BEF60"
+X-Priority: 3 (Normal)
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook IMO, Build 9.0.2416 (9.0.2910.0)
+Importance: Normal
+X-MimeOLE: Produced By Microsoft MimeOLE V5.00.2314.1300
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0005_01BFC037.799BEF60
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+
+The Hare and the Tortoise=20
+=20
+A HARE one day ridiculed the short feet and slow pace of the Tortoise, =
+who replied, laughing:  "Though you be swift as the wind, I will beat =
+you in a race."  The Hare, believing her assertion to be simply =
+impossible, assented to the proposal; and they agreed that the Fox =
+should choose the course and fix the goal.  On the day appointed for the =
+race the two started together.  The Tortoise never for a moment stopped, =
+but went on with a slow but steady pace straight to the end of the =
+course.  The Hare, lying down by the wayside, fell fast asleep.  At last =
+waking up, and moving as fast as he could, he saw the Tortoise had =
+reached the goal, and was comfortably dozing after her fatigue. =20
+=20
+Slow but steady wins the race. =20
+
+
+------=_NextPart_000_0005_01BFC037.799BEF60
+MIME-Version: 1.0
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4KPEhUTUw+PEhFQUQ+CjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1pc28t
+ODg1OS0xIiBodHRwLWVxdWl2PUNvbnRlbnQtVHlwZT4KPE1FVEEgY29udGVudD0iTVNIVE1MIDUu
+MDAuMjMxNC4xMDAwIiBuYW1lPUdFTkVSQVRPUj48L0hFQUQ+CjxCT0RZPjxhc2Q+dGV4dF9zdHJp
+bmdfYXNkZjwvYXNkPgo8RElWPjxGT05UIGZhY2U9QXJpYWwgc2l6ZT0yPjxCUj5UaGUgSGFyZSBh
+bmQgdGhlIFRvcnRvaXNlIDxCUj4mbmJzcDs8QlI+QSBIQVJFIApvbmUgZGF5IHJpZGljdWxlZCB0
+aGUgc2hvcnQgZmVldCBhbmQgc2xvdyBwYWNlIG9mIHRoZSBUb3J0b2lzZSwgd2hvIHJlcGxpZWQs
+IApsYXVnaGluZzombmJzcDsgIlRob3VnaCB5b3UgYmUgc3dpZnQgYXMgdGhlIHdpbmQsIEkgd2ls
+bCBiZWF0IHlvdSBpbiBhIApyYWNlLiImbmJzcDsgVGhlIEhhcmUsIGJlbGlldmluZyBoZXIgYXNz
+ZXJ0aW9uIHRvIGJlIHNpbXBseSBpbXBvc3NpYmxlLCBhc3NlbnRlZCAKdG8gdGhlIHByb3Bvc2Fs
+OyBhbmQgdGhleSBhZ3JlZWQgdGhhdCB0aGUgRm94IHNob3VsZCBjaG9vc2UgdGhlIGNvdXJzZSBh
+bmQgZml4IAp0aGUgZ29hbC4mbmJzcDsgT24gdGhlIGRheSBhcHBvaW50ZWQgZm9yIHRoZSByYWNl
+IHRoZSB0d28gc3RhcnRlZCAKdG9nZXRoZXIuJm5ic3A7IFRoZSBUb3J0b2lzZSBuZXZlciBmb3Ig
+YSBtb21lbnQgc3RvcHBlZCwgYnV0IHdlbnQgb24gd2l0aCBhIHNsb3cgCmJ1dCBzdGVhZHkgcGFj
+ZSBzdHJhaWdodCB0byB0aGUgZW5kIG9mIHRoZSBjb3Vyc2UuJm5ic3A7IFRoZSBIYXJlLCBseWlu
+ZyBkb3duIGJ5IAp0aGUgd2F5c2lkZSwgZmVsbCBmYXN0IGFzbGVlcC4mbmJzcDsgQXQgbGFzdCB3
+YWtpbmcgdXAsIGFuZCBtb3ZpbmcgYXMgZmFzdCBhcyBoZSAKY291bGQsIGhlIHNhdyB0aGUgVG9y
+dG9pc2UgaGFkIHJlYWNoZWQgdGhlIGdvYWwsIGFuZCB3YXMgY29tZm9ydGFibHkgZG96aW5nIAph
+ZnRlciBoZXIgZmF0aWd1ZS4mbmJzcDsgPEJSPiZuYnNwOzxCUj5TbG93IGJ1dCBzdGVhZHkgd2lu
+cyB0aGUgcmFjZS4mbmJzcDsgCjxCUj48L0ZPTlQ+PC9ESVY+PC9CT0RZPjwvSFRNTD4K
+
+------=_NextPart_000_0005_01BFC037.799BEF60--

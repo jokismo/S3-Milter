@@ -46,6 +46,12 @@ def timestamp_end(start):
     return datetime.datetime.now() - start
 
 
+def log_database_entry(**kwargs):
+    substitute_missing(kwargs, ['module_name', 'function_name', 'table_name'])
+    log_string = '<DB Update><{module_name}.{function_name}><Table:{table_name}>'.format(**kwargs)
+    return _add_log_string_params(kwargs, log_string)
+
+
 def log_error(**kwargs):
     substitute_missing(kwargs, ['module_name', 'function_name', 'error'])
     log_string = '<ERROR><{module_name}.{function_name}><{error}>'.format(**kwargs)

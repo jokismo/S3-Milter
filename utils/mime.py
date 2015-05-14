@@ -13,7 +13,7 @@ def handle_error(function_name, error, name='Mime Error.'):
                                                error=error))
 
 
-def _check_content_disposition(part, attachment_name):
+def _check_content_disposition(part, attachment_name, part_id=0):
     try:
         content_disposition = part.get_params(None, 'Content-Disposition')
         if content_disposition is not None:
@@ -24,9 +24,10 @@ def _check_content_disposition(part, attachment_name):
                 if key.lower() == 'inline':
                     is_inline = True
             if is_inline and not attachment_name:
-                file_extension = extension_map.get(part['content-type'])
+                file_extension = extension_map.get(part.get_content_type())
                 if file_extension is not None:
-                    attachment_name = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S%f') + '.' + file_extension
+                    attachment_name = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S%f')\
+                        + '{}.'.format(part_id) + file_extension
         return attachment_name
     except Exception as e:
         handle_error('_check_content_disposition', str(e))
@@ -46,8 +47,11 @@ def _check_name(part, attachment_name):
 
 
 def get_attachment_parts(message, txt_list, html_list):
+    part_id = 0
+    name_stripper_regex = re.compile('[^-_\.A-Za-z0-9]+')
     try:
         for part in message.walk():
+            part_id += 1
             attachment_name = ''
             if part.is_multipart():
                 continue
@@ -57,7 +61,7 @@ def get_attachment_parts(message, txt_list, html_list):
             if part.get_content_type() == 'text/html':
                 html_list.append(part)
                 continue
-            attachment_name = _check_content_disposition(part, attachment_name)
+            attachment_name = _check_content_disposition(part, attachment_name, part_id=part_id)
             if not attachment_name:
                 attachment_name = _check_name(part, attachment_name)
             if attachment_name:
@@ -68,6 +72,7 @@ def get_attachment_parts(message, txt_list, html_list):
                 max_length = 128
                 if name_length > max_length:
                     attachment_name = attachment_name[name_length - max_length:]
+                attachment_name = name_stripper_regex.sub('', attachment_name)
                 yield (part, attachment_name, content_id)
     except Exception as e:
         handle_error('get_attachment_parts', str(e))

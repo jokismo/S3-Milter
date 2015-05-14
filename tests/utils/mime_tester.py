@@ -14,7 +14,7 @@ def upload_file(f_data, f_name, service):
 if __name__ == '__main__':
     s3 = S3()
     s3.set_bucket('persafd')
-    f = open('sample_message', 'r')
+    f = open('text_only_no_cid', 'r')
     try:
         html_parts = []
         text_parts = []
