@@ -53,7 +53,12 @@ class S3(object):
         try:
             k = Key(self.bucket)
             k.key = folder_path + file_name
-            k.set_contents_from_string(data)
+            if not config or not config.get('upload_method'):
+                k.set_contents_from_string(data)
+            else:
+                if config['upload_method'] == 'file':
+                    print data
+                    k.set_contents_from_filename(data)
             if config and config.get('is_public'):
                 k.make_public()
             url = k.generate_url(expires_in=0).split('?')[0]

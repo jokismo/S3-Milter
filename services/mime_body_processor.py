@@ -1,5 +1,6 @@
 import datetime
 import sys
+import math
 
 from utils.log_config import log_error
 from utils.log_config import log_called
@@ -8,12 +9,45 @@ from utils import mime
 from utils.exceptions import MilterException
 from services.s3 import S3
 from milter_config import s3_config
+from milter_config import body_processor_params
+from milter_config import html_content
+from utils.file_extension_map import reverse_extension_map
 
 
 def handle_error(function_name, error, name='Postgre Service Error.', params=None):
     error = str(error)
     raise MilterException(500, name, log_error(module_name=__name__, function_name=function_name,
                                                error=error, params=params))
+
+
+def update_text_url_string(text_string, file_url, file_name):
+    if text_string == '':
+        text_string += body_processor_params['plain_text_replace_strings']['initial_line']
+    return text_string + body_processor_params['plain_text_replace_strings']['url_line'].format(file_name, file_url)
+
+
+def shrink_to_max_length(string, max_length):
+    length = len(string)
+    num_dots = 3
+    if length > max_length:
+        split_position = int(math.floor(max_length / 2))
+        return string[:split_position - 3] + ('.' * num_dots) + string[length - split_position:]
+    else:
+        return string
+
+
+def get_url_string_html(file_url, file_name):
+    template_string = html_content['attachment']['html']
+    file_ext = file_name.split('.')[-1]
+    mime_type = reverse_extension_map.get(file_ext)
+    mime_prefix = mime_type.split('/')[0]
+    if mime_prefix == 'image':
+        icon = 'photo'
+    else:
+        icon = 'disc'
+    file_type_name = shrink_to_max_length(mime_type, 15)
+    file_name = shrink_to_max_length(file_name, 18)
+    template_string.format(url=file_url, icon=icon, file_type_name=file_type_name, file_name=file_name)
 
 
 class MimeBodyProcessor(object):
@@ -31,10 +65,10 @@ class MimeBodyProcessor(object):
         self.log('debug', log_called(module_name=__name__, function_name='process_body'))
         html_parts = []
         text_parts = []
+        url_strings_html = []
+        urls_string_plain_text = ''
         attachments_with_cid = {}
         attachment_generator = mime.get_attachment_parts(body, text_parts, html_parts)
-        html_string = '<div><p>Attachments have been uploaded to Amazon S3:</p><ul>'
-        text_string = '\nAttachments have been uploaded to Amazon S3:\n'
         for attachment_part, file_name, c_id in attachment_generator:
             try:
                 if self.s3 is None:
@@ -43,8 +77,8 @@ class MimeBodyProcessor(object):
                 f_url = self.upload_file(data, file_name)
                 self.attachments += 1
                 mime.clear_attachment(attachment_part)
-                html_string += '<li><a href="{}">{}</a></li>'.format(f_url, file_name)
-                text_string += '{}: {}\n'.format(file_name, f_url)
+                update_text_url_string(urls_string_plain_text, f_url, file_name)
+                url_strings_html.append(get_url_string_html(f_url, file_name))
                 if c_id is not None:
                     self.log('debug', log_status(module_name=__name__, function_name='process_body',
                                                  msg='CID={}'.format(c_id)))
@@ -56,10 +90,9 @@ class MimeBodyProcessor(object):
         if self.attachments == 0:
             return
         try:
-            html_string += '</ul></div>'
-            mime.add_plain_text_urls(text_parts, text_string)
+            mime.add_plain_text_urls(text_parts, urls_string_plain_text)
             mime.replace_cids(html_parts, attachments_with_cid)
-            mime.add_html_urls(html_parts, html_string)
+            mime.add_html_urls(html_parts, url_strings_html)
         except Exception as e:
             handle_error('process_body', str(e))
 

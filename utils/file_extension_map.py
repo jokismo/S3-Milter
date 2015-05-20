@@ -765,3 +765,5 @@ extension_map = {
     'video/x-smv': 'smv',
     'x-conference/x-cooltalk': 'ice'
 }
+
+reverse_extension_map = {extension_map[key]: key for key in extension_map}

@@ -2,6 +2,7 @@ from services import s3
 from milter_config import s3_config
 from utils.exceptions import MilterException
 from requests import get
+import os
 
 
 class S3Test(object):
@@ -53,3 +54,14 @@ if __name__ == '__main__':
     s3_test = S3Test()
     s3_test.run_offline_tests()
     s3_test.run_networked_tests()
+    # s3_tester = s3.S3(s3_config)
+    # with open('asdf.png', 'rb') as svg:
+    #     svg_string = base64.b64encode(svg.read())
+    #     print svg_string
+    # path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'title.svg')
+    # url = s3_tester.store(['static'], 'title.svg', path, config={
+    #     'is_public': True,
+    #     'return_url': True,
+    #     'upload_method': 'file'
+    # })
+    # print url
