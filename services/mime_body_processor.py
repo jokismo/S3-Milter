@@ -14,10 +14,13 @@ from milter_config import html_content
 from utils.file_extension_map import reverse_extension_map
 
 
-def handle_error(function_name, error, name='Postgre Service Error.', params=None):
-    error = str(error)
-    raise MilterException(500, name, log_error(module_name=__name__, function_name=function_name,
-                                               error=error, params=params))
+def handle_error(function_name, error, name='MimeBodyProcessor Service Error.', params=None):
+    if isinstance(error, MilterException):
+        raise error
+    else:
+        error = str(error)
+        raise MilterException(500, name, log_error(module_name=__name__, function_name=function_name,
+                                                   error=error, params=params))
 
 
 def update_text_url_string(text_string, file_url, file_name):
@@ -28,10 +31,10 @@ def update_text_url_string(text_string, file_url, file_name):
 
 def shrink_to_max_length(string, max_length):
     length = len(string)
-    num_dots = 3
+    num_dots = body_processor_params['html']['long_string_num_dots']
     if length > max_length:
         split_position = int(math.floor(max_length / 2))
-        return string[:split_position - 3] + ('.' * num_dots) + string[length - split_position:]
+        return string[:split_position - num_dots] + ('.' * num_dots) + string[length - split_position:]
     else:
         return string
 
@@ -45,9 +48,51 @@ def get_url_string_html(file_url, file_name):
         icon = 'photo'
     else:
         icon = 'disc'
-    file_type_name = shrink_to_max_length(mime_type, 15)
+    file_type_name = shrink_to_max_length(mime_type, 18)
     file_name = shrink_to_max_length(file_name, 18)
-    template_string.format(url=file_url, icon=icon, file_type_name=file_type_name, file_name=file_name)
+    return template_string.format(url=file_url, icon=icon, file_type_name=file_type_name, file_name=file_name)
+
+
+def compose_attachments_html(url_strings_html):
+    num_attachments = len(url_strings_html)
+    num_columns = int(math.ceil(float(num_attachments) / 2.0))
+    num_rows = int(math.ceil(float(num_columns) / 2.0))
+    html = ''
+    for z in xrange(0, num_rows):
+        if z == 0:
+            row_html = html_content['first_row_container']['html']
+            row_position = html_content['first_row_container']['insert_position']
+        else:
+            row_html = html_content['other_row_container']['html']
+            row_position = html_content['other_row_container']['insert_position']
+        columns_html = ''
+        for x in xrange(0, 2):
+            if x == 0:
+                col_html = html_content['left_col_container']['html']
+                left_insert = html_content['left_col_container']['left_insert']
+                right_insert = html_content['left_col_container']['right_insert']
+            else:
+                col_html = html_content['right_col_container']['html']
+                left_insert = html_content['right_col_container']['left_insert']
+                right_insert = html_content['right_col_container']['right_insert']
+            try:
+                for y in xrange(0, 2):
+                    attachment_html = url_strings_html.pop()
+                    if y == 0:
+                        position = col_html.find(left_insert)
+                        col_html = col_html[:position] + attachment_html + col_html[position:]
+                    else:
+                        position = col_html.find(right_insert)
+                        col_html = col_html[:position] + attachment_html + col_html[position:]
+            except IndexError:
+                columns_html += col_html
+                break
+            columns_html += col_html
+        row_html = row_html[:row_position] + columns_html + row_html[row_position:]
+        html += row_html
+    container = html_content['container']['html']
+    position = html_content['container']['insert_position']
+    return container[:position] + html + container[position:]
 
 
 class MimeBodyProcessor(object):
@@ -74,27 +119,32 @@ class MimeBodyProcessor(object):
                 if self.s3 is None:
                     self.s3 = S3(s3_config, self.log_queue)
                 data = attachment_part.get_payload(decode=True)
-                f_url = self.upload_file(data, file_name)
+                file_url = self.upload_file(data, file_name)
                 self.attachments += 1
                 mime.clear_attachment(attachment_part)
-                update_text_url_string(urls_string_plain_text, f_url, file_name)
-                url_strings_html.append(get_url_string_html(f_url, file_name))
+                update_text_url_string(urls_string_plain_text, file_url, file_name)
+                url_strings_html.append(get_url_string_html(file_url, file_name))
                 if c_id is not None:
                     self.log('debug', log_status(module_name=__name__, function_name='process_body',
                                                  msg='CID={}'.format(c_id)))
-                    attachments_with_cid[c_id] = f_url
+                    attachments_with_cid[c_id] = file_url
             except Exception as e:
                 handle_error('process_body', str(e), params={
-                    'file_name': file_name
+                    'file_name': file_name,
+                    'mail_from': self.mail_from,
+                    'recipients': str(self.recipients)
                 })
         if self.attachments == 0:
             return
         try:
             mime.add_plain_text_urls(text_parts, urls_string_plain_text)
             mime.replace_cids(html_parts, attachments_with_cid)
-            mime.add_html_urls(html_parts, url_strings_html)
+            mime.add_html_urls(html_parts, compose_attachments_html(url_strings_html))
         except Exception as e:
-            handle_error('process_body', str(e))
+            handle_error('process_body', str(e), params={
+                'mail_from': self.mail_from,
+                'recipients': str(self.recipients)
+            })
 
     def log_failure(self, error):
         self.log('error', error)

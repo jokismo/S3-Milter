@@ -15,7 +15,7 @@ from utils.exceptions import MilterException
 from services.mime_body_processor import MimeBodyProcessor
 
 
-def handle_error(function_name, error, name='Postgre Service Error.', params=None):
+def handle_error(function_name, error, name='S3Milter Service Error.', params=None):
     error = str(error)
     raise MilterException(500, name, log_error(module_name=__name__, function_name=function_name,
                                                error=error, params=params))
@@ -77,7 +77,10 @@ class S3Milter(MimeBodyProcessor, Milter.Base):
         except MilterException as e:
             self.log_failure(str(e))
         except Exception as e:
-            self.log_failure(log_error(module_name=__name__, function_name='eom', error=str(e)))
+            self.log_failure(log_error(module_name=__name__, function_name='eom', error=str(e), params={
+                'mail_from': self.mail_from,
+                'recipients': str(self.recipients)
+            }))
         finally:
             return Milter.ACCEPT
 

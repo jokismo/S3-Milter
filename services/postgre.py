@@ -8,10 +8,13 @@ from utils.log_config import log_error
 
 
 def handle_error(function_name, error, name='Postgre Service Error.'):
-    error = str(error)
-    error = error.replace('\n', ' ')
-    raise MilterException(500, name, log_error(module_name=__name__, function_name=function_name,
-                                               error=error))
+    if isinstance(error, MilterException):
+        raise error
+    else:
+        error = str(error)
+        error = error.replace('\n', ' ')
+        raise MilterException(500, name, log_error(module_name=__name__, function_name=function_name,
+                                                   error=error))
 
 
 def list_to_list_of_dicts(column_names, results):
@@ -133,8 +136,6 @@ def transaction(conn, trans_config, bind_vars=None, return_dicts=False):
                     'column_names': column_names,
                     'results_list': results_list
                 }
-    except MilterException as e:
-        raise e
     except Exception as e:
         handle_error('transaction', e)
 
@@ -196,8 +197,6 @@ class Postgre(object):
                 if conn.closed != 0:  # Non zero means closed or problem
                     self.conn = self.make_connection()
                     conn = self.conn
-        except MilterException as e:
-            raise e
         except Exception as e:
             handle_error('transaction', '<Connection Fail>' + str(e))
         else:
