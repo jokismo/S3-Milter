@@ -4,8 +4,9 @@ from milter_config import body_processor_params
 
 class MimeBodyProcessorTest(object):
 
-    def __init__(self, test_vars):
-        self.vars = test_vars
+    def __init__(self, log_queue=None, postgre_queue=None):
+        self.log_queue = log_queue
+        self.postgre_queue = postgre_queue
 
     def run_offline_tests(self):
         test_update_text_url_string()
@@ -14,6 +15,9 @@ class MimeBodyProcessorTest(object):
         test_compose_attachments_html()
 
     def run_networked_tests(self):
+        self.test_mime_body_processor()
+
+    def test_mime_body_processor(self):
         pass
 
 

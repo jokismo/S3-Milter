@@ -97,14 +97,13 @@ def compose_attachments_html(url_strings_html):
 
 class MimeBodyProcessor(object):
 
-    def __init__(self, log_queue=None, postgre_queue=None, mail_from='', recipients=None):
+    def __init__(self, log_queue=None, postgre_queue=None, mail_from='unknown', recipients=None):
         self.log_queue = log_queue
         self.postgre_queue = postgre_queue
         self.s3 = None
-        self.log = None
         self.attachments = 0
         self.mail_from = mail_from
-        self.recipients = [] if recipients is None else ''
+        self.recipients = ['unknown'] if recipients is None else ''
 
     def process_body(self, body):
         self.log('debug', log_called(module_name=__name__, function_name='process_body'))
@@ -152,7 +151,7 @@ class MimeBodyProcessor(object):
             self.postgre_queue.put({
                 'command': {
                     'type': 'insert',
-                    'table_name': 'failed_attachment',
+                    'table_name': 'failed_attachments',
                     'columns': ['error', 'sender_id', 'receiver_id']
                 },
                 'kwargs': {
@@ -202,3 +201,10 @@ class MimeBodyProcessor(object):
             self.log('error', log_error(module_name=__name__, function_name='upload_file',
                                         error='No Postgre Queue Found'))
         return url
+
+    def log(self, log_type, message):
+        if self.log_queue is not None:
+            self.log_queue.put({
+                'type': log_type,
+                'message': message
+            })

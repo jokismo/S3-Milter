@@ -1,0 +1,55 @@
+From: Rich Example <rich-example@example.org>
+To: A Recipient <recipient@example.org>
+Subject: An example of email with images and a plain alternative
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="outer-boundary"
+
+This is a MIME-encoded message. If you are seeing this, your mail
+reader is old.
+--outer-boundary
+Content-Type: text/plain; charset=us-ascii
+
+This message might make you :) or it might make you :(
+
+--outer-boundary
+MIME-Version: 1.0
+Content-Type: multipart/related;
+  type="text/html"; start="<body@here>"; boundary="inner-boundary"
+
+--inner-boundary
+Content-Type: text/html; charset=us-ascii
+Content-Disposition: inline
+Content-ID: <body@here>
+
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+ <body>
+  This message might make you
+  <img src="cid:smile@here" alt="smile">
+  or it might make you
+  <img src="CID:frown@here" alt="frown">
+ </body>
+ </head>
+</html>
+
+--inner-boundary
+Content-Type: image/gif
+Content-Disposition: inline
+Content-Transfer-Encoding: base64
+Content-ID: <smile@here>
+
+R0lGODlhEAAQAKEBAAAAAP//AP//AP//ACH5BAEKAAIALAAAAAAQABAAAAIzlA2px6IBw2
+IpWglOvTahDgGdI0ZlGW5meKlci6JrasrqkypxJr8S0oNpgqkGLtcY6hoFADs=
+
+--inner-boundary
+Content-Type: image/gif
+Content-Disposition: inline
+Content-Transfer-Encoding: base64
+Content-ID: <frown@here>
+
+R0lGODlhEAAQAKEBAAAAAAD//wD//wD//yH5BAEKAAIALAAAAAAQABAAAAIzlA2px6IBw2
+IpWglOvTahDgGdI0ZlGW5meKlci75drDzm5uLZyZ1I3Mv8ZB5Krtgg1RoFADs=
+
+--inner-boundary--
+
+--outer-boundary--

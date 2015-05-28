@@ -26,7 +26,7 @@ class S3Milter(MimeBodyProcessor, Milter.Base):
     def __init__(self):  # Each connection calls new S3Milter
         MimeBodyProcessor.__init__(self)
         self.id = Milter.uniqueID()  # Integer incremented with each call.
-        self.fp = StringIO.StringIO()
+        self.body_file = StringIO.StringIO()
         self.log_queue = None
         self.postgre_queue = None
         self.start_time = timestamp_start()
@@ -59,20 +59,22 @@ class S3Milter(MimeBodyProcessor, Milter.Base):
     @Milter.noreply
     def body(self, chunk):
         self.log('debug', log_called(module_name=__name__, function_name='body'))
-        self.fp.write(chunk)
+        self.body_file.write(chunk)
         return Milter.CONTINUE
 
     def eom(self):
         self.log('debug', log_called(module_name=__name__, function_name='eom'))
-        self.fp.seek(0)
+        self.body_file.seek(0)
         try:
-            body = message_from_file(self.fp)
+            body = message_from_file(self.body_file)
             self.process_body(body)
             if self.attachments > 0:
                 self.replace_body(body)
                 self.log('info', log_success(module_name=__name__, function_name='eom',
                                              msg='Upload Complete.',
-                                             params={'count': self.attachments,
+                                             params={'mail_from': self.mail_from,
+                                                     'recipients': str(self.recipients),
+                                                     'count': self.attachments,
                                                      'time': timestamp_end(self.start_time)}))
         except MilterException as e:
             self.log_failure(str(e))
@@ -100,10 +102,3 @@ class S3Milter(MimeBodyProcessor, Milter.Base):
         self.log('error', log_error(module_name=__name__, function_name='abort',
                                     error='Client disconnected prematurely.'))
         return Milter.CONTINUE
-
-    def log(self, log_type, message):
-        if self.log_queue is not None:
-            self.log_queue.put({
-                'type': log_type,
-                'message': message
-            })
