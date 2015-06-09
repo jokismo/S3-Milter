@@ -103,7 +103,7 @@ class MimeBodyProcessor(object):
         self.s3 = None
         self.attachments = 0
         self.mail_from = mail_from
-        self.recipients = ['unknown'] if recipients is None else ''
+        self.recipients = ['unknown'] if recipients is None else recipients
 
     def process_body(self, body):
         self.log('debug', log_called(module_name=__name__, function_name='process_body'))

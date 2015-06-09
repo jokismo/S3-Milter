@@ -25,6 +25,7 @@ class Test(object):
     def test_a_resources(self):
         mime_body_processor_test = MimeBodyProcessorTest(self.log_queue, self.postgre_queue)
         mime_body_processor_test.run_offline_tests()
+        mime_body_processor_test.run_networked_tests()
 
     @classmethod
     def tearDownClass(klass):

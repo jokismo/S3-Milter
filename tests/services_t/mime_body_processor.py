@@ -1,3 +1,6 @@
+import os
+from email import message_from_file
+
 from services import mime_body_processor
 from milter_config import body_processor_params
 
@@ -18,7 +21,13 @@ class MimeBodyProcessorTest(object):
         self.test_mime_body_processor()
 
     def test_mime_body_processor(self):
-        pass
+        test_processor = mime_body_processor.MimeBodyProcessor(self.log_queue, self.postgre_queue, 'test@test.com',
+                                                               ['test1@test.com', 'test2@test.com'])
+        test_dir = os.path.join(os.getcwd() + '/tests/utils_t/test_messages')
+        test_file = os.path.join(test_dir + '/text_html_two_attachments.txt')
+        with open(test_file, 'r') as f:
+            msg = message_from_file(f)
+            test_processor.process_body(msg)
 
 
 def test_update_text_url_string():
